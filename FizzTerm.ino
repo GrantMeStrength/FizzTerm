@@ -38,7 +38,7 @@ SdFile root;
 const int chipSelect = 53;  // Might be different on your hardware
 
 // Variables used by this app
-int BAUDRATE = 9600;
+#define BAUDRATE 9600
 bool HIDE_ECHO = false;
 bool RECORDING = false;
 char buffer[80];
