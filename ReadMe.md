@@ -2,7 +2,7 @@
 
 ## A simple Arduino-based system for capturing and replaying serial data to SD card.
 
-![](FizzTerm_snap.jpg)
+![](fizzterm_snap.jpg)
 
 If you have built a retro-computer project from a kit, say, an Altair-Duino or an RC2014, you might be looking for a convenient way to load and save content.
 
