@@ -63,14 +63,14 @@ void setup() {
   Serial1.println(WHITE);
 
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    Serial.println("Error: SD Card was not found.");
-    while (1);
+    Serial1.println("Error: SD Card was not found.");
+    while (1); // You may not want the terminal to hang with no SD card present.
   }
 
   // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
   if (!volume.init(card)) {
-    Serial.println("Error: SD Card was found, but could not be read.");
-    while (1);
+    Serial1.println("Error: SD Card was found, but could not be read.");
+    while (1); // You may not want the terminal to hang with no SD card present.
   }
 
   // Clear buffer
@@ -164,7 +164,7 @@ void Enter_Line()
       }
 
 
-      if (strncmp(buffer, "!WIPE", 4) == 0)
+      if (strncmp(buffer, "!WIPE", 4) == 0) // Yes, DEL or ERA would have been better but I'm being lazy and assuming 5 chars
       {
         char filename[13];
         for (int i = 6; i < 18; i++)
