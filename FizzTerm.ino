@@ -19,6 +19,9 @@
   when you type LIST you won't see the list of files on your card.
 
   Note: Baud rate is set at 9600. You may need to change this.
+
+  v0.3 = Toggle between 9600 and 115200 with the baud keyword
+  v0.3 = The command checking is no longer case-sensitive
   
 */
 
@@ -38,7 +41,7 @@ SdFile root;
 const int chipSelect = 53;  // Might be different on your hardware
 
 // Variables used by this app
-#define BAUDRATE 9600
+long BAUDRATE = 9600;
 bool HIDE_ECHO = false;
 bool RECORDING = false;
 char buffer[80];
@@ -59,18 +62,21 @@ void setup() {
   Serial1.println(" |  __| | |_  /_  / |/ _ \\ '__| '_ \\` _ \\ ");
   Serial1.println(" | |    | |/ / / /| |  __/ |  | | | | | |");
   Serial1.println(" |_|    |_/___/___|_|\\___|_|  |_| |_| |_|\n");
-  Serial1.println("                                      v0.1\n");
+  Serial1.println("                                      v0.3\n");
   Serial1.println(WHITE);
 
+ 
+  //Serial.println("Debugging. v0.2\n");
+ 
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
     Serial1.println("Error: SD Card was not found.");
-    while (1); // You may not want the terminal to hang with no SD card present.
+    //while (1); // You may not want the terminal to hang with no SD card present.
   }
 
   // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
   if (!volume.init(card)) {
     Serial1.println("Error: SD Card was found, but could not be read.");
-    while (1); // You may not want the terminal to hang with no SD card present.
+    //while (1); // You may not want the terminal to hang with no SD card present.
   }
 
   // Clear buffer
@@ -131,19 +137,25 @@ void Enter_Line()
 
       buffer[buffer_count - 1] = 0; // Get rid of the newline character in there
 
-      if (strncmp(buffer, "!HELP", 5) == 0)
+      if (strncasecmp(buffer, "!HELP", 5) == 0)
       {
         FS_HELP();
         found_command = true;
       }
 
-      if (strncmp(buffer, "!LIST", 5) == 0)
+      if (strncasecmp(buffer, "!BAUD", 5) == 0)
+      {
+        FS_BAUD();
+        found_command = true;
+      }
+
+      if (strncasecmp(buffer, "!LIST", 5) == 0)
       {
         FS_LIST();
         found_command = true;
       }
 
-      if (strncmp(buffer, "!SAVE", 5) == 0)
+      if (strncasecmp(buffer, "!SAVE", 5) == 0)
       {
         char filename[13];
         for (int i = 6; i < 18; i++)
@@ -153,7 +165,7 @@ void Enter_Line()
         found_command = true;
       }
 
-      if (strncmp(buffer, "!LOAD", 5) == 0)
+      if (strncasecmp(buffer, "!LOAD", 5) == 0)
       {
         char filename[13];
         for (int i = 6; i < 18; i++)
@@ -164,7 +176,7 @@ void Enter_Line()
       }
 
 
-      if (strncmp(buffer, "!WIPE", 4) == 0) // Yes, DEL or ERA would have been better but I'm being lazy and assuming 5 chars
+      if (strncasecmp(buffer, "!WIPE", 4) == 0) // Yes, DEL or ERA would have been better but I'm being lazy and assuming 5 chars
       {
         char filename[13];
         for (int i = 6; i < 18; i++)
@@ -175,7 +187,7 @@ void Enter_Line()
         found_command = true;
       }
 
-      if (strncmp(buffer, "!DUMP", 5) == 0)
+      if (strncasecmp(buffer, "!DUMP", 5) == 0)
       {
         char filename[13];
         for (int i = 6; i < 18; i++)
@@ -185,7 +197,7 @@ void Enter_Line()
         found_command = true;
       }
 
-      if (strncmp(buffer, "!STOP", 5) == 0)
+      if (strncasecmp(buffer, "!STOP", 5) == 0)
       {
 
         if (RECORDING)
@@ -263,7 +275,7 @@ void Display_From_Computer()
 void loop()
 {
   Enter_Line();
-  Display_From_Computer();
+  Display_From_Computer();   
 }
 
 
@@ -272,14 +284,17 @@ void loop()
 void FS_HELP()
 {
   Serial1.println(GREEN);
+  Serial1.println();
   Serial1.println("FIZZTERM");
+  Serial1.println();
   Serial1.println("!HELP       This helpful text.");
+  Serial1.println("!BAUD       Toggle the bit rate between 9600 and 115200.");
   Serial1.println("!LIST       List the files stored on the SD card.");
   Serial1.println("!LOAD file  Load the named file, sending it directly to the connected computer.");
   Serial1.println("!DUMP file  Display the contents the named file, but only to the terminal.");
-  Serial1.println("!SAVE file  Save the next set of data to SD from the connected computer.");
+  Serial1.println("!SAVE file  Save incoming data to SD from the computer until !STOP or CTRL C.");
   Serial1.println("!STOP       Stop saving data to file.");
-  Serial1.println("!WIPE file   Delete the named file from the SD card.");
+  Serial1.println("!WIPE file  Delete the named file from the SD card.");
   Serial1.println(WHITE);
 }
 
@@ -351,7 +366,7 @@ void FS_LOAD(const char* filename)
   if (dataFile) {
     while (dataFile.available()) {
       Serial2.write(dataFile.read());
-      delay(10); // Little pause to give the computer time to digest the data.
+      delay(10); // Little pause to give the computer time to digest the data. May need increased if computer is slow
 
       // Ignore any echo'd chars from computer
       if (Serial2.available()) {
@@ -371,6 +386,34 @@ void FS_LOAD(const char* filename)
   Serial1.write("OK");
   Serial1.println(WHITE);
 
+}
+
+void FS_BAUD()
+{
+  //
+  // Toggle between 9600 and 115200
+  // But you could change this to cycle between all possible speeds if required.
+  //
+  Serial.flush();
+  Serial1.flush();
+  Serial2.flush();
+  Serial.end();
+  Serial1.end();
+  Serial2.end();
+
+  delay(2500);
+
+  if (BAUDRATE == 9600)
+  {
+    BAUDRATE = 115200;
+  }
+  else
+    BAUDRATE = 9600;
+  }
+
+  delay(2500);
+
+  setup();
 }
 
 void FS_LIST()
