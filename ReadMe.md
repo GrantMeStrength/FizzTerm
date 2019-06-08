@@ -21,9 +21,11 @@ The full list of parts is:
 
 Connect the SD-Card reader in the standard way (to CS, MSIO, MOSI, SCK, +3.3v and Ground) and the two serial adpators to 16,17 and 18,19 (and 3.3v and Gnd). [Here's a link](https://www.arduino.cc/en/Reference/SPI) to the Arduino page listing the correct pins to use. The MEGA actually prints TX1, RX1, TX2, RX2, TX3, RX3 on the board which is useful. Yes, the Arduino MEGA has a third serial port free - you could expand the project to be a software switch to select between multiple sources.
 
-Housing a project like this is a little tricky as it can be difficult to cut out holes for the DB9 serial sockets in ABS plastic. You can of course 3D print a suitable enclosure, or repurpose an old, clunky manual serial select device that comes in a smallish steel box with DB9 sockets already mounted (and easily removed). In the end, I housed my circuit in an acyrlic plastic enclosure.
-
 ![](FizzTerm_bb.png)
+
+Housing a project like this is a little tricky as it can be difficult to cut out holes for the DB9 serial sockets in ABS plastic. You can of course 3D print a suitable enclosure, or repurpose an old, clunky manual serial select device that comes in a smallish steel box with DB9 sockets already mounted (and easily removed). 
+
+In the end, things got out of hand for me, and [I built a complete terminal to house it](https://github.com/GrantMeStrength/FT1).
 
 ## Software
 
