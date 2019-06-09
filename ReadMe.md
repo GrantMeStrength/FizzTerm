@@ -6,20 +6,22 @@
 
 If you have built a retro-computer project from a kit, say, an Altair-Duino or an RC2014, you might be looking for a convenient way to load and save content such as BASIC or Assembler programs.
 
-You could run a terminal application on a Windows or Mac device, and use it to capture content. However, if you have a dedicated terminal this might not be an option. This project creates a device that sits between your retro-computer and your terminal's RS232 connection, and is invisible until you use one of the supported commands.
+You *could* run a terminal application on a Windows or Mac device, and use it to capture content. However, if you have a dedicated terminal this might not be an option. This project creates a device that sits between your retro-computer and your terminal's RS232 connection, and is invisible until you use one of the supported commands.
 
 Once activated, FizzTerm can save or load data to a SD card. For example, you might use it to capture a BASIC program, and then load it back later. Or you might even enter the program on your actual computer, and save it to the SD card so it can be loaded.
+
+It's also quite fun to create a stand-alone terminal like this, to be perfectly honest.
 
 ## Hardware
 
 The full list of parts is:
 
 * An Arduino MEGA2560 or compatible
-* An Arduino-compatible SD-Card reader. (These are available on Amazon at 5 for $10)
+* An Arduino-compatible SD-Card reader. (These are available on Amazon very cheaply - something like five for $10)
 * Two Arduino-compatible RS232-TTL adpators. (These are also available on Amazon for about $10 each)
 * An extra serial cable.
 
-Connect the SD-Card reader in the standard way (to CS, MSIO, MOSI, SCK, +3.3v and Ground) and the two serial adpators to 16,17 and 18,19 (and 3.3v and Gnd). [Here's a link](https://www.arduino.cc/en/Reference/SPI) to the Arduino page listing the correct pins to use. The MEGA actually prints TX1, RX1, TX2, RX2, TX3, RX3 on the board which is useful. Yes, the Arduino MEGA has a third serial port free - you could expand the project to be a software switch to select between multiple sources.
+Connect the SD-Card reader in the standard way (to CS, MSIO, MOSI, SCK, +3.3v and Ground) and the two serial adpators to 16,17 and 18,19 (and 3.3v and Gnd). [Here's a link](https://www.arduino.cc/en/Reference/SPI) to the Arduino page listing the correct pins to use. The MEGA actually prints TX1, RX1, TX2, RX2, TX3, RX3 on the board which is useful. The Arduino MEGA has a third serial port free - you could expand the project to be a software switch to select between multiple sources.
 
 ![](FizzTerm_bb.png)
 
@@ -35,6 +37,7 @@ The one caveat is when using the SD.H library. By default, the SD.H library will
 
 The simplest way around this is to copy the SD.H library, and then search and replace references to *Serial.* to *Serial1.* in the source code. Or just don't use the *!LIST* command - other commands will work fine.
 
+(On the todo list is to rewrite everything to support SDFat library instead.)
 
 ## Operation
 
@@ -77,3 +80,13 @@ You should be now able to type *LIST* and see the listing as if you had typed it
 As mentioned, you could adapt the software and hardware to select between different serial inputs (one terminal, two retro-computers). At the moment, the !BAUD keyword toggles between speeds of 9600 and 115200 (the default speeds of an Altair-Duino and RC2014) but you could write code to cycle through the most common values.
 
 Not every system can display and then receive text in a meaningful way. That is, a system may not list out assembler in a way which a program can load and re-assemble. You may have to get a little inventive. Isn't that what using retro-computers is all about? 
+
+## Updates
+
+I've added a few more features in v3.1.
+
+1. You can toggle between baud rates (currently 9600 and 115200 with the !BAUD keyword). You can add support for other rates just as easily.
+
+2. Keywords can be in uppercase or lowercase.
+
+3. I found an oddity when playing Zork on the terminal connected to an Altair-Arduino system. It turns out that **Serial2.write(buffer)** is too fast, and makes bad things happen. Rewriting to send out chars one at a time with a tiny delay resolves the issue.

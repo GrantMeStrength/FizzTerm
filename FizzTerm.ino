@@ -21,8 +21,10 @@
   Note: Baud rate is set at 9600. You may need to change this.
 
   v0.3 = Toggle between 9600 and 115200 with the baud keyword
-  v0.3 = The command checking is no longer case-sensitive
+  v0.3.1 = The command checking is no longer case-sensitive, and sending 
+            strings to computer slower to avoid chokng it.
   
+
 */
 
 
@@ -62,12 +64,11 @@ void setup() {
   Serial1.println(" |  __| | |_  /_  / |/ _ \\ '__| '_ \\` _ \\ ");
   Serial1.println(" | |    | |/ / / /| |  __/ |  | | | | | |");
   Serial1.println(" |_|    |_/___/___|_|\\___|_|  |_| |_| |_|\n");
-  Serial1.println("                                      v0.3\n");
+  Serial1.println("                                   v0.3.1\n");
   Serial1.println(WHITE);
 
  
-  //Serial.println("Debugging. v0.2\n");
- 
+  
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
     Serial1.println("Error: SD Card was not found.");
     //while (1); // You may not want the terminal to hang with no SD card present.
@@ -133,6 +134,9 @@ void Enter_Line()
 
     if (inByte == 13) // User pressed return
     {
+      // Eat next char, it will be 10
+      int extraByte = Serial1.read();
+      
       // Check for commmands
 
       buffer[buffer_count - 1] = 0; // Get rid of the newline character in there
@@ -226,16 +230,32 @@ void Enter_Line()
         return;
       }
 
-      buffer[buffer_count - 1] = 13; // Add back the newline character so computer acts on text
+
 
       // No commands found, so a regular string to pass onto computer
 
       HIDE_ECHO = true; // Don't display the text the computer spits back that includes the line we just sent.
       // Why? Sometimes there is a > prompt for example, and that would mess up what the user
       // sees.
-
+  
+      // Take a new line on the terminal, so the user knows they pressed return
       Serial1.write(13);
-      Serial2.write(buffer);
+
+      // Now send the text to the computer, char by char
+     
+      int i = 0;
+      do {
+        Serial2.write(buffer[i++]);
+        delay(10); // Don't make it choke..
+      } while(buffer[i]!=0 && i<80);
+
+      Serial2.write("\r");
+
+      // Some omputers are too slow to be sent the entire buffer in one go, rather than char by char with a delay.
+      // If your computer is quick, replace the above with this:
+     // Serial2.write(buffer);
+      
+     
       buffer_count = 0;
       for (int i = 0; i < 80; i++)
         buffer[i] = 0;
@@ -257,7 +277,7 @@ void Display_From_Computer()
     if (HIDE_ECHO == false)
     {
       Serial1.write(inByte);
-
+    
       if (RECORDING) // Save any data from the computer to an open file on the SD card.
       {
         myFile.write(inByte);
@@ -268,9 +288,12 @@ void Display_From_Computer()
     if (inByte == 13) // Wait to echo text back until we get the CR, so absorb the echo of the sent string
     {
       HIDE_ECHO = false;
+       
     }
   }
 }
+
+
 
 void loop()
 {
@@ -282,7 +305,7 @@ void loop()
 
 
 void FS_HELP()
-{
+{ 
   Serial1.println(GREEN);
   Serial1.println();
   Serial1.println("FIZZTERM");
@@ -394,10 +417,10 @@ void FS_BAUD()
   // Toggle between 9600 and 115200
   // But you could change this to cycle between all possible speeds if required.
   //
-  Serial.flush();
+  //Serial.flush();
   Serial1.flush();
   Serial2.flush();
-  Serial.end();
+  //Serial.end();
   Serial1.end();
   Serial2.end();
 
@@ -408,6 +431,7 @@ void FS_BAUD()
     BAUDRATE = 115200;
   }
   else
+  {
     BAUDRATE = 9600;
   }
 
